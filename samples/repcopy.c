@@ -22,6 +22,7 @@
 #include <sys/types.h>
 
 #include "libsdxi.h"
+#include "samples.h"
 
 #define TEST_BUFFER_ALIGN	4096
 #define PAGE_SIZE_4KB		4096
@@ -32,7 +33,7 @@ int main(int argc, char *argv[])
 {
 	sdxi_ctxt_h ctxt;
 	int src_size, dst_size, i;
-	void *src, *dst;
+	void *src = NULL, *dst = NULL;
 
 	if (sdxi_ctxt_create("dma_rep_copy_ctxt", &ctxt) != SDXI_OK) {
 		fprintf(stderr, "Failed to create SDXI context\n");
@@ -43,8 +44,8 @@ int main(int argc, char *argv[])
 	dst_size = PAGE_SIZE_4KB * SRC_BUFFER_4KB_NUM * BUFFER_REPEAT;
 
 	/* init source and dest buffers */
-	posix_memalign((void **)&src, TEST_BUFFER_ALIGN, src_size);
-	posix_memalign((void **)&dst, TEST_BUFFER_ALIGN, dst_size);
+	posix_memalign_check((void **)&src, TEST_BUFFER_ALIGN, src_size);
+	posix_memalign_check((void **)&dst, TEST_BUFFER_ALIGN, dst_size);
 
 	printf("SDXI memory rep copy test ...\n");
 	printf("    memory buffer src = %p, size = 0x%x\n", src, src_size);

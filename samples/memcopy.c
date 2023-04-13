@@ -22,6 +22,7 @@
 #include <sys/types.h>
 
 #include "libsdxi.h"
+#include "samples.h"
 
 #define TEST_BUFFER_ALIGN	4096
 #define TEST_BUFFER_SIZE	4096
@@ -29,7 +30,7 @@
 int main(int argc, char *argv[])
 {
 	sdxi_ctxt_h ctxt;
-	void *src, *dst;
+	void *src = NULL, *dst = NULL;
 
 	if (sdxi_ctxt_create("dma_copy_ctxt", &ctxt) != SDXI_OK) {
 		fprintf(stderr, "Failed to create SDXI context\n");
@@ -37,8 +38,8 @@ int main(int argc, char *argv[])
 	}
 
 	/* init source and dest buffers */
-	posix_memalign((void **)&src, TEST_BUFFER_ALIGN, TEST_BUFFER_SIZE);
-	posix_memalign((void **)&dst, TEST_BUFFER_ALIGN, TEST_BUFFER_SIZE);
+	posix_memalign_check((void **)&src, TEST_BUFFER_ALIGN, TEST_BUFFER_SIZE);
+	posix_memalign_check((void **)&dst, TEST_BUFFER_ALIGN, TEST_BUFFER_SIZE);
 
 	printf("SDXI memory copy test ...\n");
 	printf("    memory buffer src = %p\n", src);

@@ -22,6 +22,7 @@
 #include <sys/types.h>
 
 #include "libsdxi.h"
+#include "samples.h"
 
 #define DST_BUFFER_ALIGN	4096
 #define DST_BUFFER_SIZE		4096
@@ -30,7 +31,7 @@
 int main(int argc, char *argv[])
 {
 	sdxi_ctxt_h ctxt;
-	void *dst;
+	void *dst = NULL;
 	char data[DATA_BUFFER_SIZE];
 
 	if (sdxi_ctxt_create("write_imm_ctxt", &ctxt) != SDXI_OK) {
@@ -39,7 +40,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* init dst buffer */
-	posix_memalign((void **)&dst, DST_BUFFER_ALIGN, DST_BUFFER_SIZE);
+	posix_memalign_check((void **)&dst, DST_BUFFER_ALIGN, DST_BUFFER_SIZE);
 
 	memset(dst, 0xBE, DST_BUFFER_SIZE);
 	memset(data, 0xCD, DATA_BUFFER_SIZE);
