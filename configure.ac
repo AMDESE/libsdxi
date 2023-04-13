@@ -1,0 +1,13 @@
+AC_PREREQ([2.60])
+AC_INIT([libsdxi], GIT_VERSION, [wei.huang2@amd.com])
+
+AC_CONFIG_SRCDIR([src/sdxi.c])
+AC_CONFIG_MACRO_DIRS([m4])
+
+AM_INIT_AUTOMAKE
+AC_PROG_CC
+
+LT_INIT
+
+AC_CONFIG_FILES([Makefile src/Makefile])
+AC_OUTPUT
