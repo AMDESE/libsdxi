@@ -41,88 +41,98 @@ void build_dma_nop(struct sdxi_desc *desc)
 }
 
 void build_dma_copy(struct sdxi_desc *desc,
-		    uint64_t src, uint8_t src_attr, uint16_t src_akey,
-		    uint64_t dst, uint8_t dst_attr, uint16_t dst_akey,
+		    uint64_t addr_src, uint8_t attr_src, uint16_t src_akey,
+		    uint64_t addr_dst, uint8_t attr_dst, uint16_t dst_akey,
 		    int32_t size)
 {
 	memset(desc, 0, sizeof(*desc));
 
 	desc->fe = 1;
-	desc->body[0] |= size - 1;
-	desc->body[1] |= (src_attr & 0xF);
-	desc->body[1] |= ((dst_attr & 0xF) << 4);
-	desc->body[2] |= (src_akey & 0xFFFF);
-	desc->body[2] |= ((dst_akey & 0xFFFF) << 16);
-	desc->body[3] = (src & 0xFFFFFFFF);
-	desc->body[4] = ((src >> 32) & 0xFFFFFFFF);
-	desc->body[5] = (dst & 0xFFFFFFFF);
-	desc->body[6] = ((dst >> 32) & 0xFFFFFFFF);
+
+	desc->body.dmabasegrp.copy.size 	= size - 1;
+	desc->body.dmabasegrp.copy.attr_src 	= attr_src;
+	desc->body.dmabasegrp.copy.attr_dst 	= attr_dst;
+	desc->body.dmabasegrp.copy.akey0	= src_akey;
+	desc->body.dmabasegrp.copy.akey1 	= dst_akey;
+	desc->body.dmabasegrp.copy.addr0 	= addr_src;
+	desc->body.dmabasegrp.copy.addr1 	= addr_dst;
 
 	DESC_BUILD_TYPE(desc, OP_TYPE_DMA, OP_DMA_COPY);
 }
 
 void build_dma_rep_copy(struct sdxi_desc *desc,
-			uint64_t src, uint8_t src_attr, uint16_t src_akey,
-			uint64_t dst, uint8_t dst_attr, uint16_t dst_akey,
-			int32_t n_4k, uint32_t repeat)
+			uint64_t addr_src, uint8_t attr_src, uint16_t akey_src,
+			uint64_t addr_dst, uint8_t attr_dst, uint16_t akey_dst,
+			int32_t size_4k, uint32_t repetitions)
 {
+	/* convert value from "number if 4KB chunks minus 1"
+	 * to value in bytes (see spec v1.0 p.96)
+	 */
+	uint32_t nsize = (size_4k - 1) << 12;
+
 	memset(desc, 0, sizeof(*desc));
 
 	desc->fe = 1;
 
-	desc->body[0] |= ((n_4k - 1) << 12);
-	desc->body[1] |= (src_attr & 0xF);
-	desc->body[1] |= ((dst_attr & 0xF) << 4);
-	desc->body[2] |= (src_akey & 0xFFFF);
-	desc->body[2] |= ((dst_akey & 0xFFFF) << 16);
-	desc->body[3] = (src & 0xFFFFFFFF);
-	desc->body[4] = ((src >> 32) & 0xFFFFFFFF);
-	desc->body[5] = (dst & 0xFFFFFFFF);
-	desc->body[6] = ((dst >> 32) & 0xFFFFFFFF);
-	desc->body[7] = (((repeat - 1) << 12) & 0xFFFFFFFF);
+	desc->body.dmabasegrp.repcopy.nsize 	= nsize;
+	desc->body.dmabasegrp.repcopy.attr_src 	= attr_src;
+	desc->body.dmabasegrp.repcopy.attr_dst 	= attr_dst;
+	desc->body.dmabasegrp.repcopy.akey0	= akey_src;
+	desc->body.dmabasegrp.repcopy.akey1 	= akey_dst;
+	desc->body.dmabasegrp.repcopy.addr0_src	= addr_src >> 12;
+	desc->body.dmabasegrp.repcopy.addr1_dst	= addr_dst >> 12;
+	desc->body.dmabasegrp.repcopy.num 	= repetitions;
 
 	DESC_BUILD_TYPE(desc, OP_TYPE_DMA, OP_DMA_REP_COPY);
 }
 
 void build_dma_write_imm(struct sdxi_desc *desc,
-			 uint64_t dst, uint8_t dst_attr, uint16_t dst_akey,
+			 uint64_t addr_dst, uint8_t attr_dst, uint16_t akey_dst,
 			 const uint8_t *data, uint32_t size)
 {
 	memset(desc, 0, sizeof(*desc));
 
 	desc->fe = 1;
 
-	desc->body[0] |= ((size-1) & 0x1F);
-	desc->body[1] |= (dst_attr & 0xF);
-	desc->body[2] |= (dst_akey & 0xFFFF);
-	desc->body[3] = (dst & 0xFFFFFFFF);
-	desc->body[4] = ((dst >> 32) & 0xFFFFFFFF);
-	memcpy(&(desc->body[5]), data, size);
+	desc->body.dmabasegrp.wrt_imm.bsize	= size - 1;
+	desc->body.dmabasegrp.wrt_imm.attr_dst 	= attr_dst;
+	desc->body.dmabasegrp.wrt_imm.akey0 	= akey_dst;
+	desc->body.dmabasegrp.wrt_imm.addr0	= addr_dst;
+
+	/* make sure we write no more immediate data than
+	 * the space available to avoid buffer overflow
+	 */
+	if (size > SDXI_DESC_WRT_IMM_DATA_UINT32_LEN * sizeof(uint32_t))
+		size = SDXI_DESC_WRT_IMM_DATA_UINT32_LEN;
+
+	memcpy(&(desc->body.dmabasegrp.wrt_imm.data), data, size);
 
 	DESC_BUILD_TYPE(desc, OP_TYPE_DMA, OP_DMA_WRT_IMM);
 }
 
 void build_atomic_ops(struct sdxi_desc *desc,
 		      uint8_t sub_type, uint8_t osz,
-		      uint64_t dst, uint8_t dst_attr, uint16_t dst_akey,
+		      uint64_t addr_dst, uint8_t attr_dst, uint16_t akey_dst,
 		      uint64_t op1, uint64_t op2, uint64_t ret_ptr)
 {
 	memset(desc, 0, sizeof(*desc));
 
 	desc->fe = 1;
-	desc->body[0] |= ((osz & 0x7) << 2);
-	desc->body[1] |= (dst_attr & 0xF);
-	desc->body[2] |= (dst_akey & 0xFFFF);
-	desc->body[3] = (dst & 0xFFFFFFFF);
-	desc->body[4] = ((dst >> 32) & 0xFFFFFFFF);
-	desc->body[5] = (op1 & 0xFFFFFFFF);
-	desc->body[6] = ((op1 >> 32) & 0xFFFFFFFF);
-	desc->body[7] = (op2 & 0xFFFFFFFF);
-	desc->body[8] = ((op2 >> 32) & 0xFFFFFFFF);
-	desc->body[9] = (ret_ptr & 0xFFFFFFFF);
-	desc->body[10] = ((ret_ptr >> 32) & 0xFFFFFFFF);
-	if (ret_ptr)
-		desc->body[9] |= 0x1;
+
+	desc->body.atomicgrp.osz 		= osz - 1;
+	desc->body.atomicgrp.attr_dst 		= attr_dst;
+	desc->body.atomicgrp.akey0 		= akey_dst;
+	desc->body.atomicgrp.addr0_dst 		= addr_dst >> 3;
+	desc->body.atomicgrp.op1 		= op1;
+	desc->body.atomicgrp.op2 		= op2;
+	desc->body.atomicgrp.ret_data_ptr	= ret_ptr;
+	/* nr := no return
+	 * 	set this to 0 when ret_ptr is valid
+	 * 		result will end up here
+	 * 	set to 1 when it is not valid
+	 * 		result will be ignored
+	 */
+	desc->body.atomicgrp.nr 	= !ret_ptr;
 
 	DESC_BUILD_TYPE(desc, OP_TYPE_ATOMIC, sub_type);
 }

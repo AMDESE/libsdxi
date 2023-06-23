@@ -101,6 +101,155 @@ struct ctxt_ctrl {
 	uint32_t rsvd6[8];                   /* QW4+ */
 } __packed __aligned(64);
 
+
+/* size of sdxi descriptor body in units of 32-bit chunks */
+#define SDXI_DESC_OP_UINT32_LEN (0x34 / sizeof(uint32_t))
+
+struct sdxi_desc_op_dmabasegrp_nop {
+	/* no-op reserves the whole body and does no operation */
+	uint32_t rsv[SDXI_DESC_OP_UINT32_LEN];
+} __packed;
+
+/* "32-bytes of immediate data" -- spec v1.0 p.92 */
+#define SDXI_DESC_WRT_IMM_DATA_UINT32_LEN (32 / sizeof(uint32_t))
+
+/* type 0x1 subtype 0x1: DMAB_NOP (spec v1.0 pp.91) */
+struct sdxi_desc_op_dmabasegrp_wrt_imm {
+	/* + 0x4 */
+	uint64_t bsize		     : 5;
+	uint64_t rsv1		     : 27;
+	/* + 0x8 */
+	uint64_t attr_dst	     : 4;
+	uint64_t rsv2	             : 4;
+	uint64_t rsv3	     	     : 24;
+	/* + 0xC */
+	uint64_t akey0		     : 16;
+	uint64_t rsv4		     : 16;
+	/* + 0x10 */
+	uint64_t addr0;
+	/* + 0x18 */
+	uint32_t data[SDXI_DESC_WRT_IMM_DATA_UINT32_LEN];
+} __packed;
+
+/* type 0x1 subtype 0x2: DMAB_WRT_IMM (spec v1.0 pp.93) */
+struct sdxi_desc_op_dmabasegrp_copy {
+	/* + 0x4 */
+	uint64_t size		     : 32;
+	/* + 0x8 */
+	uint64_t attr_src	     : 4;
+	uint64_t attr_dst	     : 4;
+	uint64_t rsv1	     	     : 24;
+	/* + 0xC */
+	uint64_t akey0		     : 16;
+	uint64_t akey1		     : 16;
+	/* + 0x10 */
+	uint64_t addr0;
+	/* + 0x18 */
+	uint64_t addr1;
+	/* + 0x20 */
+	uint32_t rsv2[6];
+} __packed;
+
+/* type 0x1 subtype 0x3: DMAB_COPY (spec v1.0 pp.95) */
+struct sdxi_desc_op_dmabasegrp_repcopy {
+	/* + 0x4 */
+	uint64_t rsv1		     : 12;
+	uint64_t nsize		     : 9;
+	uint64_t rsv2		     : 11;
+	/* + 0x8 */
+	uint64_t attr_src	     : 4;
+	uint64_t attr_dst	     : 4;
+	uint64_t rsv3	     	     : 24;
+	/* + 0xC */
+	uint64_t akey0		     : 16;
+	uint64_t akey1		     : 16;
+	/* + 0x10 */
+	uint64_t az		     : 1;
+	uint64_t rsv4		     : 11;
+	uint64_t addr0_src	     : 52;
+	/* + 0x18 */
+	uint64_t rsv5		     : 12;
+	uint64_t addr1_dst	     : 52;
+	/* + 0x20 */
+	uint64_t rsv6		     : 12;
+	uint64_t num 		     : 20;
+	/* + 0x24 */
+	uint32_t rsv7[5];
+} __packed;
+
+/* type 0x1: DMA Base Operation Group (DmaBaseGrp) */
+union sdxi_desc_op_dmabasegrp {
+	struct sdxi_desc_op_dmabasegrp_nop 	nop;
+	struct sdxi_desc_op_dmabasegrp_wrt_imm 	wrt_imm;
+	struct sdxi_desc_op_dmabasegrp_copy 	copy;
+	struct sdxi_desc_op_dmabasegrp_repcopy 	repcopy;
+};
+
+/* type 0x2: Administrative Operation Group (AdminGrp) */
+struct sdxi_desc_op_admingrp {
+	/* this is here for completeness but I don't know
+	 * if there are use cases for userspace usage
+	 * of struct sdxi_desc for AdminGrp requests
+	 */
+	uint32_t rsv[SDXI_DESC_OP_UINT32_LEN];
+} __packed;
+
+/* type 0x3: Full Atomic Operation Group (AtomicGrp)
+ * All AtomicGrp operations use the same sdxi_desc format
+ * (see spec v1.0 p.97)
+ */
+struct sdxi_desc_op_atomicgrp {
+	/* + 0x4 */
+	uint64_t rsv1		     : 2;
+	uint64_t osz		     : 3;
+	uint64_t rsv2		     : 27;
+	/* + 0x8 */
+	uint64_t attr_dst	     : 4;
+	uint64_t rsv3	     	     : 4;
+	uint64_t rsv4	     	     : 24;
+	/* + 0xC */
+	uint64_t akey0		     : 16;
+	uint64_t rsv5		     : 16;
+	/* + 0x10 */
+	uint64_t rsv6		     : 2;
+	uint64_t n		     : 1;
+	uint64_t addr0_dst 	     : 61;
+	/* + 0x18 */
+	uint64_t op1;
+	/* + 0x20 */
+	uint64_t op2;
+	/* + 0x28 */
+	uint64_t nr		     : 1;
+	uint64_t rsv7		     : 1;
+	uint64_t ret_data_ptr	     : 61;
+	/* + 0x30 */
+	uint32_t rsv8[2];
+} __packed;
+
+/* type 0x4: Interrupt Operation Group (IntrGrp)
+ * has only subtype 0x0 (DSC_INTR) so no need for union
+ * (see spec v1.0 p.100)
+ */
+struct sdxi_desc_op_intrgrp {
+	/* + 0x4 */
+	uint64_t rsv1;
+	/* + 0xC */
+	uint64_t akey		     : 16;
+	uint64_t rsv2		     : 16;
+	/* + 0x10 */
+	uint32_t rsv3[10];
+} __packed;
+
+union sdxi_desc_body {
+	uint32_t raw[SDXI_DESC_OP_UINT32_LEN];
+	/* See spec v1.0 p.85 for details on these groups*/
+	/* "_op" name from p86 of spec v1.0 */
+	union sdxi_desc_op_dmabasegrp 	dmabasegrp;
+	struct sdxi_desc_op_admingrp 	admingrp;
+	struct sdxi_desc_op_atomicgrp  	atomicgrp;
+	struct sdxi_desc_op_intrgrp 	intrgrp;
+} __packed;
+
 struct sdxi_desc {
 	uint32_t vl                  : 1;
 	uint32_t se                  : 1;
@@ -111,7 +260,7 @@ struct sdxi_desc {
 	uint32_t sub_type            : 8;
 	uint32_t type                : 11;
 	uint32_t rsvd2               : 5;
-	uint32_t body[13];
+	union sdxi_desc_body body;
 	uint64_t comp_ptr;                   /* DW14 */
 } __packed __aligned(64);
 
