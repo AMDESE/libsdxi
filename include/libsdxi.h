@@ -28,11 +28,37 @@ extern "C" {
 
 typedef enum {
 	SDXI_OK = 0,
-	SDXI_INVAL = -1,
-	SDXI_NO_MEM = -2,
-	SDXI_NO_DEV = -3,
-	SDXI_NO_CTXT = -4,
+	SDXI_INVAL,
+	SDXI_NO_MEM,
+	SDXI_NO_DEV,
+	SDXI_NO_CTXT,
+	SDXI_STATUS_COUNT,
+	SDXI_UNKNOWN = 666,
 } sdxi_status;
+
+static const char * sdxi_status_strings[] = {
+	[SDXI_OK] 	= "SDXI STATUS: OK",
+	[SDXI_INVAL] 	= "SDXI STATUS: INVALID",
+	[SDXI_NO_MEM] 	= "SDXI STATUS: NO MEMORY",
+	[SDXI_NO_DEV] 	= "SDXI STATUS: NO DEVICE",
+	[SDXI_NO_CTXT] 	= "SDXI STATUS: NO CONTEXT",
+	[SDXI_UNKNOWN] 	= "SDXI STATUS: UNKNOWN",
+};
+
+static inline const char * sdxi_status_str(sdxi_status status) {
+	if (status < 0 || status >= SDXI_STATUS_COUNT)
+		status = SDXI_UNKNOWN;
+
+	return sdxi_status_strings[status];
+}
+
+
+static inline void sdxi_status_ok_or_die(sdxi_status status, const char * msg) {
+	if (status != SDXI_OK) {
+		fprintf(stderr, "%s\n\t%s\n", msg, sdxi_status_str(status));
+		exit(1);
+	}
+}
 
 typedef void (*sdxi_cb_fn) (
 	void *callback_tag,

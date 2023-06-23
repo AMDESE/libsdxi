@@ -30,14 +30,14 @@
 
 int main(int argc, char *argv[])
 {
+	int ret;
 	sdxi_ctxt_h ctxt;
+	sdxi_status res;
 	void *dst = NULL;
 	char data[DATA_BUFFER_SIZE];
 
-	if (sdxi_ctxt_create("write_imm_ctxt", &ctxt) != SDXI_OK) {
-		fprintf(stderr, "Failed to create SDXI context\n");
-		exit(1);
-	}
+	res = sdxi_ctxt_create("write_imm_ctxt", &ctxt);
+	sdxi_status_ok_or_die(res, "Failed to create SDXI context");
 
 	/* init dst buffer */
 	posix_memalign_check((void **)&dst, DST_BUFFER_ALIGN, DST_BUFFER_SIZE);
@@ -51,17 +51,20 @@ int main(int argc, char *argv[])
 
 	/* submit to sdxi */
 	sdxi_write_imm(ctxt, dst, data, DATA_BUFFER_SIZE);
-
+	sdxi_status_ok_or_die(res, "sdxi_write_imm returned failure");
 	sleep(2);
 
 	/* compare buffer contents */
 	if (memcmp(dst, data, DATA_BUFFER_SIZE) == 0 &&
-	    memcmp(dst + DATA_BUFFER_SIZE, data, DATA_BUFFER_SIZE) != 0)
-		printf("Write imm ==> SUCESS\n");
-	else
-		printf("Write imm ==> FAIL\n");
+	    memcmp(dst + DATA_BUFFER_SIZE, data, DATA_BUFFER_SIZE) != 0) {
+		fprintf(stderr, "Write imm ==> SUCCESS\n");
+		ret = 0;
+	} else {
+		fprintf(stderr, "Write imm ==> FAIL\n");
+		ret = 1;
+	}
 
 	sdxi_ctxt_close(ctxt);
 
-	return 0;
+	return ret;
 }

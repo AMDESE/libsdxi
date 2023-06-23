@@ -26,13 +26,12 @@
 int main(int argc, char *argv[])
 {
 	sdxi_ctxt_h ctxt;
+	sdxi_status res;
 
 	printf("SDXI context creation test ...\n");
 
-	if (sdxi_ctxt_create("sample_ctxt", &ctxt) != SDXI_OK) {
-		fprintf(stderr, "Context creation ==> FAILED\n");
-                exit(1);
-	}
+	res = sdxi_ctxt_create("sample_ctxt", &ctxt);
+	sdxi_status_ok_or_die(res, "Context creation ==> FAILED");
 
 	fprintf(stderr, "Context creation ==> SUCCESS\n");
 

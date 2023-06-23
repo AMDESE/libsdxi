@@ -25,15 +25,15 @@
 
 int main(int argc, char *argv[])
 {
+	int ret;
 	sdxi_ctxt_h ctxt;
+	sdxi_status res;
 	uint64_t dest;
         uint64_t original;
 	uint64_t addend;
 
-	if (sdxi_ctxt_create("atomic_uadd_ctxt", &ctxt) != SDXI_OK) {
-		fprintf(stderr, "Failed to create SDXI context\n");
-		exit(1);
-	}
+	res = sdxi_ctxt_create("atomic_uadd_ctxt", &ctxt);
+	sdxi_status_ok_or_die(res, "Failed to create SDXI context");
 
 	printf("SDXI atomic uadd test ...\n");
 
@@ -42,17 +42,20 @@ int main(int argc, char *argv[])
 	original = dest;
 
 	/* submit to sdxi */
-	sdxi_atomic_uadd(ctxt, &dest, addend);
-
+	res = sdxi_atomic_uadd(ctxt, &dest, addend);
+	sdxi_status_ok_or_die(res, "sdxi_atomic_uadd returned failure");
 	sleep(1);
 
 	/* compare the values */
-	if (dest == (original + addend))
-		printf("Atomic uadd ==> SUCESS\n");
-	else
-		printf("Atomic uadd ==> FAIL\n");
+	if (dest == (original + addend)) {
+		fprintf(stderr, "Atomic uadd ==> SUCCESS\n");
+		ret = 0;
+	} else {
+		fprintf(stderr, "Atomic uadd ==> FAIL\n");
+		ret = 1;
+	}
 
 	sdxi_ctxt_close(ctxt);
 
-	return 0;
+	return ret;
 }

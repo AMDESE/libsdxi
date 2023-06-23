@@ -29,13 +29,13 @@
 
 int main(int argc, char *argv[])
 {
+	int ret;
 	sdxi_ctxt_h ctxt;
+	sdxi_status res;
 	void *src = NULL, *dst = NULL;
 
-	if (sdxi_ctxt_create("dma_copy_ctxt", &ctxt) != SDXI_OK) {
-		fprintf(stderr, "Failed to create SDXI context\n");
-		exit(1);
-	}
+	res = sdxi_ctxt_create("dma_copy_ctxt", &ctxt);
+	sdxi_status_ok_or_die(res, "Failed to create SDXI context");
 
 	/* init source and dest buffers */
 	posix_memalign_check((void **)&src, TEST_BUFFER_ALIGN, TEST_BUFFER_SIZE);
@@ -49,16 +49,20 @@ int main(int argc, char *argv[])
 	memset(dst, 0xBE, TEST_BUFFER_SIZE);
 
 	/* submit to sdxi */
-	sdxi_mem_copy(ctxt, dst, src, TEST_BUFFER_SIZE);
+	res = sdxi_mem_copy(ctxt, dst, src, TEST_BUFFER_SIZE);
+	sdxi_status_ok_or_die(res, "sdxi_mem_copy returned failure");
 	sleep(3);
 
 	/* compare buffer contents */
-	if (memcmp(src, dst, TEST_BUFFER_SIZE) == 0)
-		printf("Memory copy ==> SUCESS\n");
-	else
-		printf("Memory copy ==> FAIL\n");
+	if (memcmp(src, dst, TEST_BUFFER_SIZE) == 0) {
+		fprintf(stderr, "Memory copy ==> SUCCESS\n");
+		ret = 0;
+	} else {
+		fprintf(stderr, "Memory copy ==> FAIL\n");
+		ret = 1;
+	}
 
 	sdxi_ctxt_close(ctxt);
 
-	return 0;
+	return ret;
 }
