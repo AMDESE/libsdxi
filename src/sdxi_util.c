@@ -89,6 +89,8 @@ const char *sdxi_grp_name(enum sdxi_grp_id grp)
 		return "XDMA";
 	case SDXI_GRP_DCOPY:
 		return "DCOPY";
+	case SDXI_GRP_ASQOSE:
+		return "ASQOSE";
 	default:
 		return "UNKNOWN";
 	}

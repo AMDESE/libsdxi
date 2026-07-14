@@ -24,7 +24,8 @@ libsdxi_la_SOURCES = \
 	sdxi_dev.c \
 	sdxi_keys.c \
 	sdxi_cxt.c \
-	sdxi_dp.c
+	sdxi_dp.c \
+	vendor/amd_qos.c
 
 libsdxi_la_LDFLAGS = \
 	-version-info 0:0:0 \

@@ -137,6 +137,7 @@ enum sdxi_grp_id {
 	SDXI_GRP_CRCM1,
 	SDXI_GRP_XDMA,
 	SDXI_GRP_DCOPY,
+	SDXI_GRP_ASQOSE,
 
 	SDXI_GRP__MAX,
 };
