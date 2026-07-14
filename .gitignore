@@ -30,6 +30,7 @@ depcomp
 /samples/context
 /samples/crc
 /samples/cxt_intr
+/samples/cxt_err
 /samples/memcopy
 /samples/nop
 /samples/opgroups
