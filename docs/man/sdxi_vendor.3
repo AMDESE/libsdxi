@@ -1,0 +1,40 @@
+.TH SDXI_VENDOR 3
+.SH NAME
+sdxi_vendor \- generic vendor-admin transport helpers for libsdxi
+.SH SYNOPSIS
+.nf
+#include <sdxi/vendor.h>
+
+int sdxi_dev_admin_vendor_probe(sdxi_dev_t *dev,
+                                const uint8_t guid[16],
+                                uint32_t timeout_ms,
+                                struct sdxi_admin_cpl *cpl_out);
+int sdxi_dev_admin_vendor(sdxi_dev_t *dev,
+                          const uint8_t guid[16], uint32_t op,
+                          const void *in, size_t in_size,
+                          void *out, size_t *out_bytes_inout,
+                          uint32_t timeout_ms,
+                          struct sdxi_admin_cpl *cpl_out);
+.fi
+.SH DESCRIPTION
+The generic vendor-admin transport sends typed request and response payloads
+through the driver's
+.BR SDXI_ADMIN_VENDOR
+path.
+.PP
+.BR sdxi_dev_admin_vendor_probe ()
+uses operation
+.B SDXI_ADMIN_VENDOR_PROBE
+to test whether a vendor GUID has a registered handler.
+.PP
+.BR sdxi_dev_admin_vendor ()
+uses size-in/size-out semantics for output buffers through
+.I out_bytes_inout .
+.PP
+Typed vendor helper families live in explicit headers under
+.BR sdxi/vendor/ ,
+so the generic transport header remains vendor-neutral.
+.SH SEE ALSO
+.BR SDXI (7),
+.BR sdxi_dev (3),
+.BR sdxi_dp (3)
