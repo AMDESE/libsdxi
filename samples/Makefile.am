@@ -1,11 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
-AM_CFLAGS = -Wall -I../include
+AM_CPPFLAGS = -I$(top_srcdir)/include
+AM_CFLAGS = -Wall
 
-memcopy_SOURCES = memcopy.c
-repcopy_SOURCES = repcopy.c
-uadd_SOURCES = uadd.c
-write_imm_SOURCES = write-imm.c
-context_SOURCES = context.c
-
-bin_PROGRAMS = memcopy repcopy uadd write_imm context
+noinst_PROGRAMS =
 LDADD = ../src/libsdxi.la

@@ -1,0 +1,6 @@
+LIBSDXI_0.1 {
+	global:
+		sdxi_*;
+	local:
+		*;
+};
