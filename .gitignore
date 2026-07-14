@@ -5,12 +5,14 @@ src/.libs/
 Makefile
 Makefile.in
 /aclocal.m4
+/ar-lib
 /autom4te.cache
 /config.*
 /configure
 /libtool
 *.1
 *.a
+*~
 m4
 missing
 ltmain.sh
@@ -22,3 +24,6 @@ depcomp
 *.trs
 *.la
 *.lo
+/*.plist
+/COPYING
+.dirstamp
