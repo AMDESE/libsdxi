@@ -234,6 +234,12 @@ or a negative errno-style value.
 .PP
 After context setup, the high-level helper path uses preallocated context CSB
 storage plus stack storage; it does not perform hidden heap allocation.
+.SS Vendor Dataplane Helpers
+Vendor-specific dataplane helpers, such as AMD S1/S2 crypto operations, live in
+explicit vendor headers under
+.BR sdxi/vendor/ .
+See
+.BR sdxi_vendor_amd (3).
 .SH RETURN VALUE
 Builder, submission, and wait helpers return 0 on success and a negative
 errno-style value on failure.
@@ -249,4 +255,5 @@ descriptor-ring, doorbell, or mmap state behind this surface.
 .BR sdxi_cxt (3),
 .BR sdxi_dev (3),
 .BR sdxi_event (3),
-.BR sdxi_vendor (3)
+.BR sdxi_vendor (3),
+.BR sdxi_vendor_amd (3)

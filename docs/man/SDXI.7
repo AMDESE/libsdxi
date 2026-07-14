@@ -52,17 +52,24 @@ context eventfd introspection
 .TP
 .B sdxi/vendor.h
 generic vendor-admin transport
+.TP
+.B sdxi/vendor/amd_qos.h
+AMD QoS admin helpers
+.TP
+.B sdxi/vendor/amd_crypto.h
+AMD S1/S2 crypto dataplane helper types and entry points
 .SH CONTROL PLANE VERSUS DATAPLANE
 The public API is split into a control-plane half and a local dataplane half.
 .PP
 The control-plane half covers device open, capability and attribute queries,
-key management, OpGroup discovery, generic vendor-admin helpers, and
-context creation/destruction.
+key management, OpGroup discovery, generic vendor-admin helpers, typed AMD QoS
+helpers, and context creation/destruction.
 .PP
 The dataplane half covers the context-owned mappings and the high-level helper
 operations documented in
 .BR sdxi_dp (3),
-including DMA, atomic, and CRC Mode1.
+including DMA, atomic, and CRC Mode1, while typed AMD S1/S2 helpers live under
+.BR sdxi_vendor_amd (3).
 .PP
 Raw local context-fd and mmap accessors live in
 .BR sdxi_dp (3)
@@ -93,4 +100,5 @@ to format return values for diagnostics.
 .BR sdxi_types (3),
 .BR sdxi_util (3),
 .BR sdxi_event (3),
-.BR sdxi_vendor (3)
+.BR sdxi_vendor (3),
+.BR sdxi_vendor_amd (3)

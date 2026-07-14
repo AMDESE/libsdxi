@@ -1,0 +1,95 @@
+.TH SDXI_VENDOR_AMD 3
+.SH NAME
+sdxi_vendor_amd \- AMD-specific libsdxi helper headers
+.SH SYNOPSIS
+.nf
+#include <sdxi/vendor/amd_qos.h>
+#include <sdxi/vendor/amd_crypto.h>
+
+int sdxi_amd_qos_get_cap(sdxi_dev_t *dev, uint32_t timeout_ms,
+                         struct sdxi_amd_qos_cap *cap_out,
+                         struct sdxi_admin_cpl *cpl_out);
+int sdxi_amd_qos_dev_update(sdxi_dev_t *dev,
+                            uint32_t device_maxbw_mb_s,
+                            uint32_t timeout_ms,
+                            struct sdxi_admin_cpl *cpl_out);
+int sdxi_amd_qos_pool_update(sdxi_dev_t *dev, uint16_t pool_num,
+                             uint8_t pool_operation,
+                             uint32_t pool_maxbw_mb_s,
+                             uint32_t pool_minbw_mb_s,
+                             uint32_t timeout_ms,
+                             struct sdxi_admin_cpl *cpl_out);
+int sdxi_amd_qos_fn_update(sdxi_dev_t *dev, uint16_t pool_num,
+                           bool cxt, bool vf, uint16_t vf_num,
+                           uint16_t cxt_start, uint16_t cxt_end,
+                           uint32_t timeout_ms,
+                           struct sdxi_admin_cpl *cpl_out);
+int sdxi_amd_qos_tel(sdxi_dev_t *dev, uint8_t query_type,
+                     const struct sdxi_amd_qos_tel_target *target,
+                     void *buf, size_t *buf_bytes_inout,
+                     uint32_t timeout_ms,
+                     struct sdxi_admin_cpl *cpl_out);
+size_t sdxi_amd_qos_tel_active_pools_bytes(uint16_t max_pools);
+size_t sdxi_amd_qos_tel_pool_report_bytes(uint16_t assigned_functions);
+
+int sdxi_amd_s1_aes_xts(sdxi_cxt_t *cxt,
+                        const struct sdxi_amd_s1_aes_xts_req *req,
+                        uint32_t timeout_ms);
+int sdxi_amd_s1_aes_ecb(sdxi_cxt_t *cxt,
+                        const struct sdxi_amd_s1_aes_ecb_req *req,
+                        uint32_t timeout_ms);
+
+int sdxi_amd_s2_aes_xts_c(sdxi_cxt_t *cxt,
+                          const struct sdxi_amd_s2_aes_xts_req *req,
+                          uint32_t timeout_ms);
+int sdxi_amd_s2_aes_ecb_c(sdxi_cxt_t *cxt,
+                          const struct sdxi_amd_s2_aes_ecb_req *req,
+                          uint32_t timeout_ms);
+int sdxi_amd_s2_sha(sdxi_cxt_t *cxt,
+                    const struct sdxi_amd_s2_sha_req *req,
+                    uint32_t timeout_ms);
+int sdxi_amd_s2_sha_copy(sdxi_cxt_t *cxt,
+                         const struct sdxi_amd_s2_sha_copy_req *req,
+                         uint32_t timeout_ms);
+int sdxi_amd_s2_aes_gcm(sdxi_cxt_t *cxt,
+                        const struct sdxi_amd_s2_aes_gcm_req *req,
+                        uint32_t timeout_ms);
+int sdxi_amd_s2_aes_ctr(sdxi_cxt_t *cxt,
+                        const struct sdxi_amd_s2_aes_ctr_req *req,
+                        uint32_t timeout_ms);
+int sdxi_amd_s2_aes_ctr_sha(
+                        sdxi_cxt_t *cxt,
+                        const struct sdxi_amd_s2_aes_ctr_sha_req *req,
+                        uint32_t timeout_ms);
+int sdxi_amd_s2_aes_xts_sha(
+                        sdxi_cxt_t *cxt,
+                        const struct sdxi_amd_s2_aes_xts_sha_req *req,
+                        uint32_t timeout_ms);
+.fi
+.SH DESCRIPTION
+AMD-specific libsdxi APIs are installed in explicit vendor headers under
+.BR sdxi/vendor/ ,
+not in the generic umbrella or generic core subsystem headers.
+.PP
+.B sdxi/vendor/amd_qos.h
+contains the typed AMD QoS control-plane helper family layered on top of the
+generic vendor-admin transport in
+.BR sdxi_vendor (3).
+Those helpers are PF-only.
+.PP
+.B sdxi/vendor/amd_crypto.h
+contains AMD crypto dataplane request types, byte-exact builder declarations,
+and high-level local dataplane helpers. These helpers depend on the generic
+advanced dataplane API documented in
+.BR sdxi_dp (3)
+and are intentionally local-only.
+.PP
+AMD crypto callers must provide the function-assigned OpGroup
+.I op_type
+discovered from the target device, and must provide buffers that satisfy the
+alignment requirements in
+.BR sdxi/vendor/amd_crypto.h .
+.SH SEE ALSO
+.BR SDXI (7),
+.BR sdxi_vendor (3),
+.BR sdxi_dp (3)

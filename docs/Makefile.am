@@ -17,6 +17,7 @@ dist_man3_MANS = \
 	man/sdxi_key.3 \
 	man/sdxi_cxt.3 \
 	man/sdxi_vendor.3 \
+	man/sdxi_vendor_amd.3 \
 	man/sdxi_dp.3
 
 dist_man7_MANS = \

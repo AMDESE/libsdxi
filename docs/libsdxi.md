@@ -31,6 +31,7 @@ The grouped reference pages are installed as:
 - `sdxi_key(3)`
 - `sdxi_cxt(3)`
 - `sdxi_vendor(3)`
+- `sdxi_vendor_amd(3)`
 - `sdxi_dp(3)`
 
 These pages are hand-authored for this source tree. Installed headers also carry file-level `DOC:` blocks, so the build can later move to generated reference output without changing the manual layout.

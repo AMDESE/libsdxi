@@ -159,6 +159,13 @@ or narrower headers under `sdxi/`, for example:
 #include <sdxi/dp.h>
 ```
 
+Vendor-specific helpers are explicit includes under `sdxi/vendor/`, such as:
+
+```c
+#include <sdxi/vendor/amd_qos.h>
+#include <sdxi/vendor/amd_crypto.h>
+```
+
 ## Runtime Requirements
 
 Applications need permission to open the selected `/dev/sdxi*` node. Depending on the system policy, this may require running as root or being in the group that owns the SDXI device node.
@@ -190,6 +197,9 @@ Common samples include:
 - `cxt_intr`: context interrupt delivery
 - `opgroups`: OpGroup discovery
 - `crc`: SDXI CRC Mode1 operations
+- `amd_aes`: AMD AES operations
+- `amd_sha`: AMD SHA operations
+- `amd_qos`: AMD QoS capability query
 
 Most samples accept `-dev` or `--dev` to choose a device:
 
@@ -208,7 +218,7 @@ The detailed documentation lives under `docs/`:
 - `libsdxi-context-dataplane.md`: context lifecycle and dataplane helpers
 - `libsdxi-key-management.md`: RKey and AKey helper model
 - `libsdxi-event-handling.md`: eventfd and interrupt helpers
-- `libsdxi-vendor-extensions.md`: generic vendor transport helpers
+- `libsdxi-vendor-extensions.md`: AMD QoS and AMD crypto helpers
 - `libsdxi-contracts.md`: return codes, lifetime, and thread-safety
 
 Manual pages are under `docs/man/` and are installed into the normal manpath. Start with:

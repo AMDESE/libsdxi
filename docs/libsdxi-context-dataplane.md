@@ -12,6 +12,8 @@ create, quiesce, destroy, and `sdxi_cxt_pasid()`
 context eventfd and interrupt metadata
 - `sdxi/dp.h`:
 raw local `cxt_fd`/mmap accessors and dataplane helpers
+- `sdxi/vendor/amd_crypto.h`:
+AMD S1/S2 crypto vendor dataplane request types and helper entry points
 
 Raw rings, doorbells, and mappings are local-only details, so they stay out of the transport-neutral context header.
 
@@ -79,6 +81,16 @@ Builder helpers write descriptor bytes without exposing the library's private, c
 - `sdxi_dp_desc_build_atomic_uadd()`
 - `sdxi_dp_desc_build_intr()`
 - `sdxi_dp_desc_build_crc_m1()`
+- `sdxi_dp_desc_build_amd_s1_aes_xts()`
+- `sdxi_dp_desc_build_amd_s1_aes_ecb()`
+- `sdxi_dp_desc_build_amd_s2_aes_xts_c()`
+- `sdxi_dp_desc_build_amd_s2_aes_ecb_c()`
+- `sdxi_dp_desc_build_amd_s2_sha()`
+- `sdxi_dp_desc_build_amd_s2_sha_copy()`
+- `sdxi_dp_desc_build_amd_s2_aes_gcm()`
+- `sdxi_dp_desc_build_amd_s2_aes_ctr()`
+- `sdxi_dp_desc_build_amd_s2_aes_ctr_sha()`
+- `sdxi_dp_desc_build_amd_s2_aes_xts_sha()`
 - `sdxi_dp_desc_set_csb()` / `sdxi_dp_desc_clear_csb()`
 - `sdxi_dp_desc_set_read_barrier()`
 - `sdxi_dp_csb_clear()` / `sdxi_dp_csb_*()` accessors
@@ -144,6 +156,18 @@ The high-level helper set is intentionally small and local:
 - `sdxi_intr()`
 - `sdxi_crc_m1()`
 
+Vendor-specific local dataplane helpers include:
+
+- `sdxi_amd_s1_aes_xts()` from `sdxi/vendor/amd_crypto.h`
+- `sdxi_amd_s1_aes_ecb()` from `sdxi/vendor/amd_crypto.h`
+- `sdxi_amd_s2_aes_xts_c()` from `sdxi/vendor/amd_crypto.h`
+- `sdxi_amd_s2_aes_ecb_c()` from `sdxi/vendor/amd_crypto.h`
+- `sdxi_amd_s2_sha()` from `sdxi/vendor/amd_crypto.h`
+- `sdxi_amd_s2_sha_copy()` from `sdxi/vendor/amd_crypto.h`
+- `sdxi_amd_s2_aes_gcm()` from `sdxi/vendor/amd_crypto.h`
+- `sdxi_amd_s2_aes_ctr()` from `sdxi/vendor/amd_crypto.h`
+- `sdxi_amd_s2_aes_ctr_sha()` from `sdxi/vendor/amd_crypto.h`
+- `sdxi_amd_s2_aes_xts_sha()` from `sdxi/vendor/amd_crypto.h`
 
 These helpers submit one operation, wait for per-descriptor completion, and return `0` or `-errno`. The library attaches and observes a CSB for each submitted descriptor. Applications that need raw ring progress semantics should use reserve/store/commit and wait helpers directly.
 

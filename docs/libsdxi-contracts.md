@@ -52,7 +52,7 @@ Under the current driver policy:
 - device discovery and read-mostly capability queries are typically usable with an open device fd, including `sdxi_dev_get_info()`, `sdxi_dev_get_uapi_info()`, `sdxi_dev_get_dev_info_raw()`, `sdxi_dev_get_caps()`, and `sdxi_dev_get_attr()`
 - read-only GUID-based discovery through `sdxi_dev_admin_disc()` and `sdxi_dev_opgroups_refresh()` is available with delegated device-node access; context creation separately authorizes the requested operation groups
 - device attribute updates and all device-scoped RKey helpers require `CAP_SYS_ADMIN`
-- `sdxi_dev_admin_vendor_probe()` and `sdxi_dev_admin_vendor()` follow vendor-handler authorization
+- `sdxi_dev_admin_vendor_probe()` and `sdxi_dev_admin_vendor()` follow vendor-handler authorization; PF-wide AMD QoS management requires `CAP_SYS_ADMIN`
 - context-scoped dataplane and AKey flows are the normal user-facing path once a context exists
 
 Applications should treat privilege failures as normal operational outcomes.
