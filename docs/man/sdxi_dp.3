@@ -1,0 +1,252 @@
+.TH SDXI_DP 3
+.SH NAME
+sdxi_dp \- local SDXI dataplane descriptors, submission, and helper APIs
+.SH SYNOPSIS
+.nf
+#include <sdxi/dp.h>
+
+/* Context access */
+struct sdxi_cxt_mmaps {
+        void *ds_ring;
+        size_t ds_ring_bytes;
+        void *cxt_sts;
+        size_t cxt_sts_bytes;
+        void *write_index;
+        size_t write_index_bytes;
+        void *doorbell;
+        size_t doorbell_bytes;
+};
+
+int sdxi_cxt_get_fd(const sdxi_cxt_t *cxt);
+int sdxi_cxt_get_mmaps(const sdxi_cxt_t *cxt,
+                       struct sdxi_cxt_mmaps *out);
+
+/* Descriptor and completion buffers */
+struct sdxi_dp_desc {
+        uint8_t bytes[SDXI_DP_DESC_BYTES];
+};
+
+struct sdxi_dp_csb {
+        uint64_t signal;
+        uint32_t flags;
+        uint8_t rsvd0[20];
+};
+
+void sdxi_dp_csb_clear(struct sdxi_dp_csb *csb);
+uint64_t sdxi_dp_csb_signal(const struct sdxi_dp_csb *csb);
+uint32_t sdxi_dp_csb_flags(const struct sdxi_dp_csb *csb);
+bool sdxi_dp_csb_done(const struct sdxi_dp_csb *csb);
+bool sdxi_dp_csb_error(const struct sdxi_dp_csb *csb);
+
+/* Raw ring submission */
+struct sdxi_dp_reserve_args {
+        uint32_t size;
+        uint32_t flags;
+        uint32_t ndesc;
+        uint32_t timeout_ms;
+        uint32_t rsvd[8];
+};
+
+struct sdxi_dp_reservation {
+        uint32_t size;
+        uint32_t flags;
+        uint64_t start;
+        uint32_t ndesc;
+        uint32_t rsvd0;
+        uint32_t rsvd[8];
+};
+
+int sdxi_dp_reserve(sdxi_cxt_t *cxt,
+                    const struct sdxi_dp_reserve_args *args,
+                    struct sdxi_dp_reservation *out);
+int sdxi_dp_desc_store(sdxi_cxt_t *cxt, uint64_t pos,
+                       const struct sdxi_dp_desc *desc);
+int sdxi_dp_commit(sdxi_cxt_t *cxt,
+                   const struct sdxi_dp_reservation *resv,
+                   uint32_t timeout_ms, uint64_t *write_idx_out);
+
+int sdxi_dp_wait_read_idx(sdxi_cxt_t *cxt, uint64_t target,
+                          uint32_t timeout_ms);
+int sdxi_dp_wait_read_idx_poll(sdxi_cxt_t *cxt, uint64_t target,
+                               uint32_t timeout_ms);
+int sdxi_dp_wait_csb(sdxi_cxt_t *cxt,
+                     const struct sdxi_dp_csb *csb,
+                     uint32_t timeout_ms);
+int sdxi_dp_wait_csb_poll(sdxi_cxt_t *cxt,
+                          const struct sdxi_dp_csb *csb,
+                          uint32_t timeout_ms);
+
+/* Descriptor controls */
+int sdxi_dp_desc_set_csb(struct sdxi_dp_desc *desc,
+                         struct sdxi_dp_csb *csb);
+int sdxi_dp_desc_clear_csb(struct sdxi_dp_desc *desc);
+int sdxi_dp_desc_set_read_barrier(struct sdxi_dp_desc *desc,
+                                  bool enable);
+
+/* Descriptor builders */
+int sdxi_dp_desc_build_dma_nop(struct sdxi_dp_desc *out);
+int sdxi_dp_desc_build_dma_copy(struct sdxi_dp_desc *out,
+                                const struct sdxi_dp_dma_copy_req *req);
+int sdxi_dp_desc_build_dma_rep_copy(
+        struct sdxi_dp_desc *out,
+        const struct sdxi_dp_dma_rep_copy_req *req);
+int sdxi_dp_desc_build_dma_write_imm(
+        struct sdxi_dp_desc *out,
+        const struct sdxi_dp_dma_write_imm_req *req);
+int sdxi_dp_desc_build_atomic_uadd(
+        struct sdxi_dp_desc *out,
+        const struct sdxi_dp_atomic_uadd_req *req);
+int sdxi_dp_desc_build_intr(struct sdxi_dp_desc *out,
+                            const struct sdxi_dp_intr_req *req);
+int sdxi_dp_desc_build_crc_m1(struct sdxi_dp_desc *out,
+                              const struct sdxi_crc_m1_req *req);
+
+/* High-level helpers */
+int sdxi_nop(sdxi_cxt_t *cxt, uint32_t timeout_ms);
+int sdxi_mem_copy(sdxi_cxt_t *cxt, void *dst, const void *src,
+                  size_t size, uint32_t timeout_ms);
+int sdxi_mem_copy_akeys(sdxi_cxt_t *cxt, void *dst, uint16_t dst_akey,
+                        const void *src, uint16_t src_akey,
+                        size_t size, uint32_t timeout_ms);
+int sdxi_mem_rep_copy(sdxi_cxt_t *cxt, void *dst, const void *src,
+                      size_t src_size, size_t repeat,
+                      uint32_t timeout_ms);
+int sdxi_write_imm(sdxi_cxt_t *cxt, void *dst, const void *data,
+                   size_t size, uint32_t timeout_ms);
+int sdxi_atomic_uadd(sdxi_cxt_t *cxt, void *addr, uint64_t operand,
+                     uint32_t timeout_ms);
+int sdxi_intr(sdxi_cxt_t *cxt, uint32_t timeout_ms);
+int sdxi_crc_m1(sdxi_cxt_t *cxt, const struct sdxi_crc_m1_req *req,
+                uint32_t timeout_ms);
+.fi
+.SH DESCRIPTION
+The dataplane API is the local, context-backed submission API for libsdxi.
+It is intended for applications running on the host that owns the SDXI device.
+It exposes two layers:
+.TP
+.B high-level helpers
+build one descriptor, submit it, wait for completion, and return an errno-style
+result.
+.TP
+.B raw ring helpers
+let applications build byte-exact descriptors and manage ring reservation,
+descriptor storage, commit, and completion waits explicitly.
+.SS Context Access
+.BR sdxi_cxt_get_fd ()
+returns the local context fd.
+.BR sdxi_cxt_get_mmaps ()
+copies the context's mapped dataplane state into
+.BR "struct sdxi_cxt_mmaps" .
+Those mappings include the descriptor ring, context status, write index, and
+doorbell. They are local implementation details and are not transport-neutral.
+.SS Descriptor and Completion Buffers
+.B struct sdxi_dp_desc
+is a 64-byte descriptor buffer aligned to
+.BR SDXI_DP_DESC_ALIGN .
+Applications should build descriptors with the
+.BR sdxi_dp_desc_build_* ()
+helpers rather than relying on compiler-dependent private bitfields.
+.PP
+.B struct sdxi_dp_csb
+is a 32-byte completion-status block aligned to
+.BR SDXI_DP_CSB_ALIGN .
+Use
+.BR sdxi_dp_csb_clear ()
+before reusing a CSB, and use
+.BR sdxi_dp_csb_done (),
+.BR sdxi_dp_csb_error (),
+.BR sdxi_dp_csb_signal (),
+and
+.BR sdxi_dp_csb_flags ()
+to inspect completion state.
+.PP
+.BR sdxi_dp_desc_set_csb ()
+attaches a caller-owned CSB to a descriptor. The CSB pointer must be aligned to
+.BR SDXI_DP_CSB_ALIGN .
+.BR sdxi_dp_desc_clear_csb ()
+removes the attached CSB.
+.BR sdxi_dp_desc_set_read_barrier ()
+sets or clears the descriptor read-barrier bit.
+.SS Descriptor Builders
+Builder request structs use a
+.I size
+field for forward compatibility. Set it to the request struct size, or leave it
+as zero for the current layout. Reserved fields must be zero.
+.PP
+The DMA builders cover NOP, COPY, repeated COPY, and WRITE_IMM descriptors.
+The atomic builder covers unsigned add. The interrupt builder emits a context
+interrupt descriptor. The CRC Mode1 builder requires the function-assigned
+OpGroup type, typically discovered with
+.BR sdxi_dev_get_op_type ()
+using
+.BR SDXI_GRP_CRCM1 ;
+see
+.BR sdxi_dev (3).
+.SS Raw Ring Submission
+The raw submission sequence is:
+.IP 1. 4
+reserve one or more absolute descriptor positions with
+.BR sdxi_dp_reserve ();
+.IP 2. 4
+store descriptor bytes into those positions with
+.BR sdxi_dp_desc_store ();
+.IP 3. 4
+publish the new write index and ring the doorbell with
+.BR sdxi_dp_commit ();
+.IP 4. 4
+wait for progress with a read-index or CSB wait helper.
+.PP
+By default, reservation and commit are single-producer and require external
+serialization for one submitting producer per context. Set
+.B SDXI_DP_RESERVE_F_MULTI_PRODUCER
+in
+.B struct sdxi_dp_reserve_args
+when multiple producers submit through the same context.
+.SS Completion Waits
+.BR sdxi_dp_wait_read_idx ()
+and
+.BR sdxi_dp_wait_csb ()
+use the bound context eventfd when present and may drain the notification while
+waiting.
+.PP
+.BR sdxi_dp_wait_read_idx_poll ()
+and
+.BR sdxi_dp_wait_csb_poll ()
+do not drain the eventfd. Use them when the application wants pure polling or
+when another event loop owns eventfd reads.
+.SS Memory Ordering
+.BR sdxi_dp_desc_store ()
+writes descriptor bytes 8 through 63, issues a release fence, then writes bytes
+0 through 7.
+.PP
+.BR sdxi_dp_commit ()
+publishes the new write index with release semantics before ringing the
+doorbell.
+.PP
+CSB accessors and wait helpers observe completion state with acquire semantics.
+Applications that use the raw mapped dataplane path should use these helpers
+instead of open-coding descriptor publication.
+.SS High-Level Helpers
+The high-level helpers include DMA NOP, memory copy, repeated copy,
+write-immediate, atomic unsigned add, context interrupt, and CRC Mode1
+operations. They submit one descriptor, attach and wait on a CSB, and return 0
+or a negative errno-style value.
+.PP
+After context setup, the high-level helper path uses preallocated context CSB
+storage plus stack storage; it does not perform hidden heap allocation.
+.SH RETURN VALUE
+Builder, submission, and wait helpers return 0 on success and a negative
+errno-style value on failure.
+.PP
+.BR sdxi_cxt_get_fd ()
+returns a non-negative context fd on success or a negative errno-style value on
+failure. CSB accessors return the observed CSB field or boolean state.
+.SH NOTES
+This API is intentionally local-only. Non-local backends should not emulate raw
+descriptor-ring, doorbell, or mmap state behind this surface.
+.SH SEE ALSO
+.BR SDXI (7),
+.BR sdxi_cxt (3),
+.BR sdxi_dev (3),
+.BR sdxi_event (3),
+.BR sdxi_vendor (3)
