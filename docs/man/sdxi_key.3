@@ -1,0 +1,140 @@
+.TH SDXI_KEY 3
+.SH NAME
+sdxi_key \- shared RKey and AKey data model for libsdxi
+.SH SYNOPSIS
+.nf
+#include <sdxi/key.h>
+
+void sdxi_key_payload_clear(struct sdxi_key_payload *payload);
+int sdxi_rkey_payload_encode(struct sdxi_key_payload *payload,
+                             uint16_t req_sfunc, uint16_t ctrl,
+                             uint16_t intr_num, uint32_t pasid,
+                             bool pr, uint8_t ph, uint16_t stag);
+int sdxi_akey_payload_encode(struct sdxi_key_payload *payload,
+                             uint16_t tgt_sfunc, uint16_t ctrl,
+                             uint16_t intr_num, uint32_t pasid,
+                             bool pr, uint8_t ph, uint16_t stag,
+                             uint16_t rkey);
+void sdxi_bitmap_free(struct sdxi_bitmap *bm);
+
+int sdxi_dev_get_rkey_list(sdxi_dev_t *dev, struct sdxi_bitmap *out);
+int sdxi_dev_get_rkeys(sdxi_dev_t *dev, struct sdxi_key_ent *ents,
+                       size_t nents);
+int sdxi_dev_get_rkey(sdxi_dev_t *dev, uint32_t index,
+                      struct sdxi_key_ent *ent_out);
+int sdxi_dev_set_rkeys(sdxi_dev_t *dev, const struct sdxi_key_ent *ents,
+                       size_t nents, uint32_t timeout_ms,
+                       struct sdxi_key_set_result *res);
+int sdxi_dev_set_rkey(sdxi_dev_t *dev,
+                      const struct sdxi_key_ent *ent);
+int sdxi_dev_set_rkeys_resume(sdxi_dev_t *dev,
+                              const struct sdxi_key_ent *ents, size_t nents,
+                              uint32_t timeout_ms,
+                              struct sdxi_key_set_result *res);
+int sdxi_dev_alloc_rkey_index(sdxi_dev_t *dev, uint32_t *index_out);
+int sdxi_dev_invalidate_rkey(sdxi_dev_t *dev, uint32_t index,
+                             uint32_t timeout_ms,
+                             struct sdxi_key_set_result *res);
+
+int sdxi_cxt_get_akey_list(sdxi_cxt_t *cxt, struct sdxi_bitmap *out);
+int sdxi_cxt_get_akeys(sdxi_cxt_t *cxt, struct sdxi_key_ent *ents,
+                       size_t nents);
+int sdxi_cxt_get_akey(sdxi_cxt_t *cxt, uint32_t index,
+                      struct sdxi_key_ent *ent_out);
+int sdxi_cxt_set_akeys(sdxi_cxt_t *cxt, const struct sdxi_key_ent *ents,
+                       size_t nents, uint32_t timeout_ms,
+                       struct sdxi_key_set_result *res);
+int sdxi_cxt_set_akey(sdxi_cxt_t *cxt,
+                      const struct sdxi_key_ent *ent);
+int sdxi_cxt_set_akeys_resume(sdxi_cxt_t *cxt,
+                              const struct sdxi_key_ent *ents, size_t nents,
+                              uint32_t timeout_ms,
+                              struct sdxi_key_set_result *res);
+int sdxi_cxt_alloc_akey_index(sdxi_cxt_t *cxt, uint32_t *index_out);
+int sdxi_cxt_invalidate_akey(sdxi_cxt_t *cxt, uint32_t index,
+                             uint32_t timeout_ms,
+                             struct sdxi_key_set_result *res);
+.fi
+.SH DESCRIPTION
+The key API uses one public model across device-scoped RKeys and
+context-scoped AKeys.
+.PP
+.B struct sdxi_key_payload
+is the raw 16-byte table payload in little-endian dword order, while
+.B struct sdxi_key_ent
+adds the table index used by GET/SET operations.
+.PP
+.B struct sdxi_key_set_result
+reports whether a batch commit succeeded fully or only partially.
+.PP
+.BR sdxi_rkey_payload_encode ()
+and
+.BR sdxi_akey_payload_encode ()
+are pure userspace payload helpers that remain in
+.BR sdxi_key (3)
+because they operate on public key-table bytes rather than dataplane
+descriptor state.
+.PP
+The single-entry helpers
+.BR sdxi_dev_get_rkey (),
+.BR sdxi_dev_set_rkey (),
+.BR sdxi_cxt_get_akey (),
+and
+.BR sdxi_cxt_set_akey ()
+wrap the corresponding batch get/set operations.
+.PP
+.BR sdxi_dev_set_rkeys_resume ()
+and
+.BR sdxi_cxt_set_akeys_resume ()
+retry a partial batch commit until the kernel reports full completion or
+forward progress stops.
+.PP
+Bitmap list helpers allocate the bitmap data in
+.B struct sdxi_bitmap .
+Release it with
+.BR sdxi_bitmap_free ().
+.PP
+.BR sdxi_dev_alloc_rkey_index ()
+and
+.BR sdxi_cxt_alloc_akey_index ()
+scan the validity bitmap and return a currently free index. They do not reserve
+the slot; the caller reserves it by successfully programming an entry.
+.PP
+.BR sdxi_dev_invalidate_rkey ()
+and
+.BR sdxi_cxt_invalidate_akey ()
+clear one table slot by submitting an all-zero payload.
+.SH NOTES
+Use
+.BR sdxi_key_payload_clear ()
+to encode an invalid table entry before passing it to a set helper.
+.PP
+The high-level local dataplane helpers use AKey slot 1 by default for normal
+userspace memory. Applications that manage AKeys manually should not overwrite
+slot 1 unless they also take responsibility for helper behavior, and should
+also avoid the interrupt AKey returned by
+.BR sdxi_cxt_get_intr_info ()
+when an interrupt-capable context is active.
+.PP
+Device-scoped RKey management is privileged under the current driver policy,
+while context-scoped AKeys follow context-fd ownership rules.
+.PP
+.BR sdxi_cxt_alloc_akey_index ()
+skips AKey slot 0, slot 1, and the context interrupt AKey when one is assigned.
+Slot 1 is used by the high-level local dataplane helpers for normal userspace
+memory.
+.PP
+For interrupt-routed entries, the
+.B SDXI_KEY_CTRL_IV
+control bit and
+.I intr_num
+must be used together. If
+.B IV
+is clear,
+.I intr_num
+must be zero.
+.SH SEE ALSO
+.BR SDXI (7),
+.BR sdxi_dev (3),
+.BR sdxi_cxt (3),
+.BR sdxi_event (3)
