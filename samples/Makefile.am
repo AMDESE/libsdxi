@@ -12,6 +12,7 @@ repcopy_SOURCES = repcopy.c
 nop_SOURCES = nop.c
 cxt_intr_SOURCES = cxt_intr.c
 opgroups_SOURCES = opgroups.c
+crc_SOURCES = crc.c
 
-noinst_PROGRAMS = context memcopy uadd write_imm repcopy nop cxt_intr opgroups
+noinst_PROGRAMS = context memcopy uadd write_imm repcopy nop cxt_intr opgroups crc
 LDADD = ../src/libsdxi.la

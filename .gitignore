@@ -28,6 +28,7 @@ depcomp
 /COPYING
 /samples/.libs/
 /samples/context
+/samples/crc
 /samples/cxt_intr
 /samples/memcopy
 /samples/nop
