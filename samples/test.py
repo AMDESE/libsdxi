@@ -20,6 +20,8 @@ TESTS = [
         ("./repcopy", "repeated memory copy"),
         ("./amd_qos", "AMD QoS capability query"),
         ("./crc", "CRC Mode1 operations"),
+        ("./amd_aes", "AMD AES operations"),
+        ("./amd_sha", "AMD SHA operations"),
         ("./cxt_intr",    "context interrupt delivery"),
         ("./opgroups","opgroup discovery"),
 ]
