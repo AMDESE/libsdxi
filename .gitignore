@@ -36,4 +36,5 @@ depcomp
 /samples/repcopy
 /samples/uadd
 /samples/write_imm
+/samples/xcopy
 .dirstamp
