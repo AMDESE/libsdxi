@@ -1,0 +1,96 @@
+.TH SDXI 7
+.SH NAME
+SDXI \- overview of the libsdxi userspace programming model
+.SH SYNOPSIS
+.nf
+#include <libsdxi.h>
+.fi
+.SH DESCRIPTION
+libsdxi is the local userspace C library for the SDXI Linux software stack.
+It wraps the SDXI char-device UAPI and exposes installed public headers under
+.BR sdxi/ .
+.PP
+The library exposes one inventory handle and two runtime handles:
+.TP
+.B sdxi_root_t
+local device inventory object used for discovery
+.TP
+.B sdxi_dev_t
+one opened SDXI PF or VF device node
+.TP
+.B sdxi_cxt_t
+one local userspace context backed by a real context fd and local mappings
+.PP
+The installed
+.BR sdxi/root.h
+header exposes the local inventory API.
+.SH HEADER MAP
+.TP
+.B sdxi/root.h
+local inventory object, scan/rescan, and root-based open
+.TP
+.B sdxi/dev.h
+device open/close, caps, attrs, OpGroup discovery
+.TP
+.B sdxi/dp.h
+advanced local dataplane accessors and high-level helper/request structs
+.TP
+.B sdxi/cxt.h
+context lifecycle and PASID/control-plane helpers
+.TP
+.B sdxi/key.h
+shared RKey/AKey data model and helpers
+.TP
+.B sdxi/types.h
+version macros, opaque handles, export annotations, common POD types
+.TP
+.B sdxi/util.h
+generic error-formatting helpers
+.TP
+.B sdxi/event.h
+context eventfd introspection
+.TP
+.B sdxi/vendor.h
+generic vendor-admin transport
+.SH CONTROL PLANE VERSUS DATAPLANE
+The public API is split into a control-plane half and a local dataplane half.
+.PP
+The control-plane half covers device open, capability and attribute queries,
+key management, OpGroup discovery, generic vendor-admin helpers, and
+context creation/destruction.
+.PP
+The dataplane half covers the context-owned mappings and the high-level helper
+operations documented in
+.BR sdxi_dp (3),
+including DMA, atomic, and CRC Mode1.
+.PP
+Raw local context-fd and mmap accessors live in
+.BR sdxi_dp (3)
+rather than
+.BR sdxi_cxt (3)
+because those details are not transport-neutral.
+.SH CURRENT STATUS
+The dataplane is explicitly local. A context owns mmaps and a real context fd;
+it is not a transport-neutral daemon object.
+.PP
+Only the local backend is supported. Root creation accepts a NULL URI or
+.BR sdxi:///local .
+.SH RETURN VALUES
+Unless a specific helper documents otherwise, libsdxi functions return 0 on
+success and a negative errno-style value on failure.
+.PP
+Use
+.BR sdxi_err_name (3)
+or
+.BR sdxi_err_str (3)
+to format return values for diagnostics.
+.SH SEE ALSO
+.BR sdxi_root (3),
+.BR sdxi_dev (3),
+.BR sdxi_dp (3),
+.BR sdxi_cxt (3),
+.BR sdxi_key (3),
+.BR sdxi_types (3),
+.BR sdxi_util (3),
+.BR sdxi_event (3),
+.BR sdxi_vendor (3)
