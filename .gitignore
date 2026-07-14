@@ -28,4 +28,5 @@ depcomp
 /COPYING
 /samples/.libs/
 /samples/context
+/samples/memcopy
 .dirstamp
