@@ -31,6 +31,7 @@ depcomp
 /samples/cxt_intr
 /samples/memcopy
 /samples/nop
+/samples/opgroups
 /samples/repcopy
 /samples/uadd
 /samples/write_imm
