@@ -4,5 +4,7 @@ AM_CFLAGS = -Wall
 
 noinst_HEADERS = samples.h
 
-noinst_PROGRAMS =
+context_SOURCES = context.c
+
+noinst_PROGRAMS = context
 LDADD = ../src/libsdxi.la

@@ -26,4 +26,6 @@ depcomp
 *.lo
 /*.plist
 /COPYING
+/samples/.libs/
+/samples/context
 .dirstamp
