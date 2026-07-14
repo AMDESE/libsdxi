@@ -6,20 +6,10 @@
  *
  * SDXI library sample code - user space write imm value
  */
-#include <errno.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/eventfd.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <sys/select.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 
 #include "libsdxi.h"
 #include "samples.h"
@@ -30,14 +20,55 @@
 
 int main(int argc, char *argv[])
 {
-	int ret;
-	sdxi_ctxt_h ctxt;
-	sdxi_status res;
+	int ret = 1;
+	sdxi_dev_t *dev = NULL;
+	sdxi_cxt_t *cxt = NULL;
 	void *dst = NULL;
 	char data[DATA_BUFFER_SIZE];
+	struct sample_args args;
+	char **dev_list = NULL;
+	size_t dev_count = 0;
+	const char *path;
 
-	res = sdxi_ctxt_create("write_imm_ctxt", &ctxt);
-	sdxi_status_ok_or_die(res, "Failed to create SDXI context");
+	if (parse_sample_args(argc, argv, &args) < 0)
+		return 1;
+
+	path = args.dev_path;
+	if (!path) {
+		ret = sdxi_list_devs(&dev_list, &dev_count);
+		if (ret) {
+			fprintf(stderr, "sdxi_list_devs: %s\n", sdxi_err_str(ret));
+			goto out;
+		}
+		if (dev_count == 0) {
+			fprintf(stderr, "No SDXI devices found under /dev\n");
+			goto out;
+		}
+		path = dev_list[0];
+		printf("Using device: %s (first)\n", path);
+	} else {
+		printf("Using device: %s\n", path);
+	}
+
+	ret = sdxi_dev_open(path, &dev);
+	if (ret) {
+		fprintf(stderr, "sdxi_dev_open: %s\n", sdxi_err_str(ret));
+		goto out;
+	}
+
+	struct sdxi_cxt_create_opts opts = {
+		.size = sizeof(opts),
+		.flags = 0,
+		.ds_ring_entries = 0,
+		.opb_000_enb = 0,
+		.eventfd = -1,
+	};
+
+	ret = sdxi_cxt_create(dev, &opts, &cxt);
+	if (ret) {
+		fprintf(stderr, "sdxi_cxt_create: %s\n", sdxi_err_str(ret));
+		goto out;
+	}
 
 	/* init dst buffer */
 	posix_memalign_check((void **)&dst, DST_BUFFER_ALIGN, DST_BUFFER_SIZE);
@@ -50,13 +81,15 @@ int main(int argc, char *argv[])
 	printf("    data buffer = %p\n", data);
 
 	/* submit to sdxi */
-	sdxi_write_imm(ctxt, dst, data, DATA_BUFFER_SIZE);
-	sdxi_status_ok_or_die(res, "sdxi_write_imm returned failure");
-	sleep(2);
+	ret = sdxi_write_imm(cxt, dst, data, DATA_BUFFER_SIZE, 5000);
+	if (ret) {
+		fprintf(stderr, "sdxi_write_imm: %s\n", sdxi_err_str(ret));
+		goto out;
+	}
 
 	/* compare buffer contents */
 	if (memcmp(dst, data, DATA_BUFFER_SIZE) == 0 &&
-	    memcmp(dst + DATA_BUFFER_SIZE, data, DATA_BUFFER_SIZE) != 0) {
+	    memcmp((uint8_t *)dst + DATA_BUFFER_SIZE, data, DATA_BUFFER_SIZE) != 0) {
 		fprintf(stderr, "Write imm ==> SUCCESS\n");
 		ret = 0;
 	} else {
@@ -64,7 +97,11 @@ int main(int argc, char *argv[])
 		ret = 1;
 	}
 
-	sdxi_ctxt_close(ctxt);
+out:
+	(void)sdxi_cxt_destroy(cxt);
+	sdxi_dev_close(dev);
+	sdxi_free_dev_list(dev_list, dev_count);
+	free(dst);
 
 	return ret;
 }
