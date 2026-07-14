@@ -1,0 +1,14 @@
+libsdxi 0.1.0
+==============
+
+Initial public preview release of the local userspace C library for the SDXI
+Linux software stack.
+
+Highlights:
+- public headers under `libsdxi.h`, `sdxi/`, and `sdxi/vendor/`
+- local device discovery, open, capability, attribute, key, context, and
+  dataplane helper APIs
+- AMD QoS helpers and AMD S1/S2 crypto helpers under
+  `sdxi/vendor/amd_crypto.h`
+- autotools packaging with pkg-config metadata, man pages, examples, and a
+  distcheck-validated release tarball
