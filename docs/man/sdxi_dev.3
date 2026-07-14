@@ -1,0 +1,110 @@
+.TH SDXI_DEV 3
+.SH NAME
+sdxi_dev \- device enumeration, open, capability, attribute, and discovery helpers
+.SH SYNOPSIS
+.nf
+#include <sdxi/dev.h>
+
+int sdxi_list_devs(char ***paths_out, size_t *count_out);
+void sdxi_free_dev_list(char **paths, size_t count);
+
+int sdxi_dev_open(const char *path, sdxi_dev_t **dev_out);
+void sdxi_dev_close(sdxi_dev_t *dev);
+
+const char *sdxi_dev_path(const sdxi_dev_t *dev);
+int sdxi_dev_get_fd(const sdxi_dev_t *dev);
+int sdxi_dev_get_info(sdxi_dev_t *dev, struct sdxi_dev_info *out);
+int sdxi_dev_get_uapi_info(sdxi_dev_t *dev, struct sdxi_uapi_info *out);
+bool sdxi_dev_has_uapi_cap(sdxi_dev_t *dev, uint64_t cap);
+int sdxi_dev_get_dev_info_raw(sdxi_dev_t *dev, struct sdxi_dev_info_raw *out);
+int sdxi_dev_get_caps(sdxi_dev_t *dev, struct sdxi_dev_caps *out);
+const char *sdxi_dev_attr_name(enum sdxi_dev_attr_id attr);
+int sdxi_dev_attr_by_name(const char *name,
+                          enum sdxi_dev_attr_id *attr_out);
+bool sdxi_dev_attr_is_writable(enum sdxi_dev_attr_id attr);
+int sdxi_dev_get_attr(sdxi_dev_t *dev, enum sdxi_dev_attr_id attr,
+                      uint64_t *val_out);
+int sdxi_dev_set_attr(sdxi_dev_t *dev, enum sdxi_dev_attr_id attr,
+                      uint64_t *val_inout);
+int sdxi_dev_admin_disc(sdxi_dev_t *dev, uint16_t index_start,
+                        uint16_t index_end, void *buf,
+                        size_t *buf_bytes_inout, uint32_t timeout_ms,
+                        struct sdxi_admin_cpl *cpl_out);
+int sdxi_dev_opgroups_refresh(sdxi_dev_t *dev, uint32_t timeout_ms);
+int sdxi_dev_get_opgroups(sdxi_dev_t *dev,
+                          struct sdxi_opgroup_info **out,
+                          size_t *count_out);
+void sdxi_free_opgroups(struct sdxi_opgroup_info *list);
+int sdxi_dev_get_op_type(sdxi_dev_t *dev, enum sdxi_grp_id grp,
+                         uint32_t timeout_ms, uint16_t *op_type_out);
+.fi
+.SH DESCRIPTION
+These helpers manage opened SDXI device nodes. For structured discovery,
+applications can enumerate inventory first with
+.BR sdxi_root (3)
+and then open a discovered device by index.
+.PP
+.BR sdxi_dev_open ()
+negotiates UAPI compatibility immediately and rejects an incompatible major
+version before returning a handle.
+.PP
+.BR sdxi_dev_get_info ()
+returns one normalized snapshot that includes the cached UAPI info, the raw
+device-info fields, and the decoded capability summary. The
+.B SDXI_DEV_INFO_F_READ_ONLY
+flag is set when open fell back to a read-only device handle.
+.PP
+.BR sdxi_dev_get_caps ()
+returns a decoded capability view derived from the raw device info.
+.PP
+Device attribute helpers translate between
+.B enum sdxi_dev_attr_id
+values and stable names, and report whether an attribute is writable through
+the public API.
+.PP
+OpGroup discovery combines fixed base-group decoding with SDXI 1.1+
+GUID-based
+.BR SDXI_ADMIN_DISC
+queries when available.
+.SH MEMORY OWNERSHIP
+.BR sdxi_list_devs ()
+allocates a NULL-terminated array of path strings. Release it with
+.BR sdxi_free_dev_list ().
+.PP
+.BR sdxi_dev_get_opgroups ()
+allocates an array of
+.B struct sdxi_opgroup_info
+entries. Release it with
+.BR sdxi_free_opgroups ().
+.PP
+Strings returned by
+.BR sdxi_dev_path ()
+are owned by the device object.
+.SH PRIVILEGES
+Read-mostly discovery and inspection helpers such as
+.BR sdxi_dev_get_info (),
+.BR sdxi_dev_get_uapi_info (),
+.BR sdxi_dev_get_dev_info_raw (),
+.BR sdxi_dev_get_caps (),
+and
+.BR sdxi_dev_get_attr ()
+may succeed with a read-only device open.
+.PP
+GUID-based OpGroup discovery and refresh are read-only and available with
+delegated device-node access. Discovering an operation group does not
+authorize a context to enable or submit it; the driver checks the requested
+raw opcode mask during context creation.
+.PP
+Under the current driver policy, attribute updates and RKey helpers documented
+in
+.BR sdxi_key (3)
+require CAP_SYS_ADMIN. Vendor-admin helpers in
+.BR sdxi_vendor (3)
+follow vendor-handler authorization.
+.SH SEE ALSO
+.BR SDXI (7),
+.BR sdxi_root (3),
+.BR sdxi_event (3),
+.BR sdxi_key (3),
+.BR sdxi_vendor (3),
+.BR sdxi_cxt (3)

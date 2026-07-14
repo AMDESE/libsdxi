@@ -1,0 +1,30 @@
+.TH SDXI_EVENT 3
+.SH NAME
+sdxi_event \- context eventfd helpers
+.SH SYNOPSIS
+.nf
+#include <sdxi/event.h>
+
+int sdxi_cxt_get_eventfd(const sdxi_cxt_t *cxt);
+int sdxi_cxt_get_intr_info(const sdxi_cxt_t *cxt,
+                           uint16_t *intr_akey_out,
+                           uint32_t *intr_num_out);
+.fi
+.SH DESCRIPTION
+Context eventfd binding is selected at
+.BR sdxi_cxt_create (3)
+time. After creation, applications inspect the bound eventfd and interrupt
+metadata with
+.BR sdxi_cxt_get_eventfd ()
+and
+.BR sdxi_cxt_get_intr_info ().
+.PP
+.BR sdxi_cxt_get_eventfd ()
+returns the bound eventfd. If no eventfd is bound, it returns a negative value.
+.PP
+.BR sdxi_cxt_get_intr_info ()
+reports the interrupt AKey and interrupt number assigned by the driver when
+eventfd binding is active.
+.SH SEE ALSO
+.BR SDXI (7),
+.BR sdxi_cxt (3)

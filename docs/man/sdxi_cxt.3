@@ -1,0 +1,104 @@
+.TH SDXI_CXT 3
+.SH NAME
+sdxi_cxt \- SDXI context lifecycle and control-plane helpers
+.SH SYNOPSIS
+.nf
+#include <sdxi/cxt.h>
+
+struct sdxi_cxt_create_opts {
+        uint32_t size;
+        uint32_t flags;
+        uint32_t ds_ring_entries;
+        uint32_t opb_000_enb;
+        int eventfd;
+        uint32_t rsvd[8];
+};
+
+int sdxi_cxt_create(sdxi_dev_t *dev,
+                    const struct sdxi_cxt_create_opts *opts,
+                    sdxi_cxt_t **cxt_out);
+int sdxi_cxt_quiesce(sdxi_cxt_t *cxt, uint32_t timeout_ms,
+                     uint32_t *cst_flags_out);
+int sdxi_cxt_destroy(sdxi_cxt_t *cxt);
+
+uint32_t sdxi_cxt_pasid(const sdxi_cxt_t *cxt);
+.fi
+.SH DESCRIPTION
+An
+.B sdxi_cxt_t
+is a local userspace context object. It owns the context fd returned by the
+driver and any mappings or auxiliary buffers the library creates.
+.PP
+The
+.BR sdxi/cxt.h
+header is the control-plane half of the context API. It keeps lifecycle
+operations and PASID introspection here, while raw local context-fd and mmap
+accessors live in
+.BR sdxi_dp (3)
+as part of the advanced local dataplane boundary.
+.PP
+Creation options support:
+.TP
+.B SDXI_CXT_CREATE_F_EVENTFD
+request a context eventfd during creation
+.PP
+When
+.I opts
+is NULL, libsdxi uses default options. When
+.I opts
+is non-NULL,
+.I size
+may be 0 or
+.BR "sizeof(struct sdxi_cxt_create_opts)" .
+Unknown flags and reserved fields must be zero.
+.PP
+The
+.I opb_000_enb
+field is a raw SDXI opb_000 mask: bit N requests opcode type N for types
+0 through 31. A value of 0 requests the driver default. Function-assigned
+opcode types are discovered with
+.BR sdxi_dev_admin_disc ()
+or
+.BR sdxi_dev_get_op_type ().
+The driver checks the requested mask against device availability and context
+policy; discovering a group does not authorize its use.
+.PP
+If
+.B SDXI_CXT_CREATE_F_EVENTFD
+is set and
+.I eventfd
+is -1, libsdxi creates and owns an eventfd. If
+.I eventfd
+is non-negative, the caller owns the fd.
+.PP
+.BR sdxi_cxt_quiesce ()
+is the explicit stop boundary.
+.BR sdxi_cxt_destroy ()
+will call
+.BR sdxi_cxt_quiesce ()
+if needed, then tear down mappings and close owned resources.
+.SH NOTES
+Only the local backend is supported for
+.BR sdxi_cxt_t .
+The object is not transport-neutral and should not be treated as something a
+remote or non-local backend can impersonate.
+.PP
+There is no public post-create context-eventfd setter.
+If
+.BR sdxi_cxt_create ()
+is called with a NULL options pointer, the library uses its default ring size,
+currently 1024 entries.
+.PP
+Context creation allocates userspace ring/status buffers and locks them with
+.BR mlock (2)
+before passing their addresses to the kernel. If context creation fails with
+.B ENOMEM
+even though the device can be opened, check the process
+.B RLIMIT_MEMLOCK
+or grant an appropriate capability such as
+.BR CAP_IPC_LOCK .
+.SH SEE ALSO
+.BR SDXI (7),
+.BR sdxi_event (3),
+.BR sdxi_dp (3),
+.BR sdxi_key (3)
