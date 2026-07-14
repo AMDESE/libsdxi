@@ -29,6 +29,7 @@ depcomp
 /samples/.libs/
 /samples/context
 /samples/memcopy
+/samples/repcopy
 /samples/uadd
 /samples/write_imm
 .dirstamp

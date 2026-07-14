@@ -8,6 +8,7 @@ context_SOURCES = context.c
 memcopy_SOURCES = memcopy.c
 uadd_SOURCES = uadd.c
 write_imm_SOURCES = write-imm.c
+repcopy_SOURCES = repcopy.c
 
-noinst_PROGRAMS = context memcopy uadd write_imm
+noinst_PROGRAMS = context memcopy uadd write_imm repcopy
 LDADD = ../src/libsdxi.la
