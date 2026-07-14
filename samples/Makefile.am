@@ -4,18 +4,19 @@ AM_CFLAGS = -Wall
 
 noinst_HEADERS = samples.h
 
+context_SOURCES = context.c
 memcopy_SOURCES = memcopy.c
-repcopy_SOURCES = repcopy.c
-xcopy_SOURCES = xcopy.c
-nop_SOURCES = nop.c
-kill_cxt_SOURCES = kill_cxt.c
-cxt_err_SOURCES = cxt_err.c
 uadd_SOURCES = uadd.c
 write_imm_SOURCES = write-imm.c
-context_SOURCES = context.c
-crc_SOURCES = crc.c
+repcopy_SOURCES = repcopy.c
+nop_SOURCES = nop.c
 cxt_intr_SOURCES = cxt_intr.c
 opgroups_SOURCES = opgroups.c
+crc_SOURCES = crc.c
+xcopy_SOURCES = xcopy.c
+cxt_err_SOURCES = cxt_err.c
+kill_cxt_SOURCES = kill_cxt.c
+amd_qos_SOURCES = amd_qos.c
 
-noinst_PROGRAMS = memcopy repcopy xcopy nop kill_cxt cxt_err uadd write_imm context crc cxt_intr opgroups
+noinst_PROGRAMS = context memcopy uadd write_imm repcopy nop cxt_intr opgroups crc xcopy cxt_err kill_cxt amd_qos
 LDADD = ../src/libsdxi.la

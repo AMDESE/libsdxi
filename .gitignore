@@ -29,6 +29,7 @@ depcomp
 /libsdxi.pc
 /libsdxi-*.tar.gz
 /samples/.libs/
+/samples/amd_qos
 /samples/context
 /samples/crc
 /samples/cxt_intr

@@ -18,6 +18,7 @@ TESTS = [
         ("./write_imm",    "write immediate data via descriptor"),
         ("./memcopy", "memory copy"),
         ("./repcopy", "repeated memory copy"),
+        ("./amd_qos", "AMD QoS capability query"),
         ("./crc", "CRC Mode1 operations"),
         ("./cxt_intr",    "context interrupt delivery"),
         ("./opgroups","opgroup discovery"),
