@@ -12,5 +12,6 @@ AC_SYS_LARGEFILE
 
 LT_INIT
 
-AC_CONFIG_FILES([Makefile src/Makefile samples/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile docs/Makefile samples/Makefile
+		 libsdxi.pc])
 AC_OUTPUT

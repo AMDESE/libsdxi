@@ -26,6 +26,8 @@ depcomp
 *.lo
 /*.plist
 /COPYING
+/libsdxi.pc
+/libsdxi-*.tar.gz
 /samples/.libs/
 /samples/context
 /samples/crc
