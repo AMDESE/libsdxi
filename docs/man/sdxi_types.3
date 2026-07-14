@@ -1,0 +1,36 @@
+.TH SDXI_TYPES 3
+.SH NAME
+sdxi_types \- base libsdxi types, version macros, and handle declarations
+.SH SYNOPSIS
+.nf
+#include <sdxi/types.h>
+.fi
+.SH DESCRIPTION
+.BR sdxi/types.h
+contains declarations shared by the rest of the installed libsdxi header set.
+.PP
+It provides:
+.TP
+.B SDXI_VERSION_MAJOR, SDXI_VERSION_MINOR, SDXI_VERSION_PATCH, SDXI_VERSION_STRING
+public library version macros
+.TP
+.B sdxi_root_t
+opaque local inventory type for device discovery
+.TP
+.B sdxi_dev_t
+opaque device handle type
+.TP
+.B sdxi_cxt_t
+opaque context handle type
+.TP
+.B struct sdxi_admin_cpl
+common completion-status POD used by admin helper APIs
+.SH RETURN VALUE CONVENTION
+Unless documented otherwise, libsdxi functions return 0 on success and
+\-errno on failure.
+.SH SEE ALSO
+.BR SDXI (7),
+.BR sdxi_root (3),
+.BR sdxi_util (3),
+.BR sdxi_dev (3),
+.BR sdxi_cxt (3)

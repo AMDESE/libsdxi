@@ -1,0 +1,28 @@
+.TH SDXI_UTIL 3
+.SH NAME
+sdxi_util \- generic libsdxi utility helpers
+.SH SYNOPSIS
+.nf
+#include <sdxi/util.h>
+
+const char *sdxi_err_str(int err);
+const char *sdxi_err_name(int err);
+.fi
+.SH DESCRIPTION
+.BR sdxi_err_name ()
+returns a short stable token for a return code, such as
+.B EINVAL
+or
+.BR ENOSPC .
+.PP
+.BR sdxi_err_str ()
+returns a human-readable string for a return code. The string is stored in a
+thread-local buffer and is overwritten by the next
+.BR sdxi_err_str ()
+call in the same thread.
+.PP
+Both helpers accept either positive errno values or libsdxi's negative
+errno-style return values.
+.SH SEE ALSO
+.BR SDXI (7),
+.BR sdxi_types (3)

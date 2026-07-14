@@ -1,0 +1,77 @@
+.TH SDXI_ROOT 3
+.SH NAME
+sdxi_root \- local device discovery and inventory helpers
+.SH SYNOPSIS
+.nf
+#include <sdxi/root.h>
+
+struct sdxi_root_opts {
+        uint32_t size;
+        const char *uri;
+        uint32_t flags;
+        uint32_t rsvd[8];
+};
+
+int sdxi_root_create(const struct sdxi_root_opts *opts,
+                     sdxi_root_t **root_out);
+void sdxi_root_destroy(sdxi_root_t *root);
+int sdxi_root_scan(sdxi_root_t *root);
+size_t sdxi_root_dev_count(const sdxi_root_t *root);
+const char *sdxi_root_dev_path(const sdxi_root_t *root, size_t index);
+int sdxi_root_dev_open(const sdxi_root_t *root, size_t index,
+                       sdxi_dev_t **dev_out);
+.fi
+.SH DESCRIPTION
+The root API is the structured discovery entry point for libsdxi. It supports
+only the local backend.
+.PP
+Create a root with
+.BR sdxi_root_create ()
+and populate or refresh the inventory with
+.BR sdxi_root_scan ().
+.PP
+Root creation accepts:
+.TP
+.B NULL
+default local backend
+.TP
+.B SDXI_ROOT_URI_LOCAL
+explicit local backend URI
+.PP
+When
+.I opts
+is non-NULL,
+.I size
+must cover
+.B struct sdxi_root_opts ,
+and
+.I flags
+and reserved fields must be zero.
+.PP
+Any other URI returns
+.BR -ENOTSUP .
+.SH INVENTORY ORDERING
+Scan results are ordered by PF, then VF. A PF entry appears before its VFs.
+.PP
+Use
+.BR sdxi_root_dev_count ()
+and
+.BR sdxi_root_dev_path ()
+to inspect the current inventory, and
+.BR sdxi_root_dev_open ()
+to open a discovered device directly from that inventory.
+.SH NOTES
+Destroying the root releases only the cached inventory. Already opened
+.B sdxi_dev_t
+and
+.B sdxi_cxt_t
+objects are unaffected.
+.PP
+The path returned by
+.BR sdxi_root_dev_path ()
+is owned by the root object and remains valid until the next successful scan or
+root destruction.
+.SH SEE ALSO
+.BR SDXI (7),
+.BR sdxi_types (3),
+.BR sdxi_dev (3)
