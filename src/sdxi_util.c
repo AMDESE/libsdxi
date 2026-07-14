@@ -91,6 +91,10 @@ const char *sdxi_grp_name(enum sdxi_grp_id grp)
 		return "DCOPY";
 	case SDXI_GRP_ASQOSE:
 		return "ASQOSE";
+	case SDXI_GRP_AMDCRYPTO_S1:
+		return "AMDCRYPTO_S1";
+	case SDXI_GRP_AMDCRYPTO_S2:
+		return "AMDCRYPTO_S2";
 	default:
 		return "UNKNOWN";
 	}

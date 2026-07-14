@@ -25,6 +25,7 @@ libsdxi_la_SOURCES = \
 	sdxi_keys.c \
 	sdxi_cxt.c \
 	sdxi_dp.c \
+	vendor/amd_crypto.c \
 	vendor/amd_qos.c
 
 libsdxi_la_LDFLAGS = \

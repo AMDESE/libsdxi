@@ -44,6 +44,22 @@
 #define SDXI_OP_CRCM1_COPY_BLK 0x02
 #define SDXI_OP_CRCM1_CALC_BLK 0x03
 
+/*
+ * AMD Cryptography Extensions subtypes (AMD SDXI Cryptography Extensions).
+ *
+ * Note: The descriptor header `type` value for AMD S1/S2 is
+ * function-assigned (1..2047) and must be discovered via AdminGrp DSC_DISC.
+ */
+#define SDXI_OP_AMD_S1_AES_XTS 0x00
+#define SDXI_OP_AMD_S1_AES_ECB 0x01
+#define SDXI_OP_AMD_S2_AES_XTS_C 0x00
+#define SDXI_OP_AMD_S2_AES_ECB_C 0x01
+#define SDXI_OP_AMD_S2_SHA 0x02
+#define SDXI_OP_AMD_S2_SHA_COPY 0x03
+#define SDXI_OP_AMD_S2_AES_GCM 0x04
+#define SDXI_OP_AMD_S2_AES_CTR 0x05
+#define SDXI_OP_AMD_S2_AES_CTR_SHA 0x06
+#define SDXI_OP_AMD_S2_AES_XTS_SHA 0x07
 
 /* Context state values (from SDXI base spec). */
 #define SDXI_CXT_STATE_STOP_SW 0x0
@@ -167,6 +183,26 @@ struct sdxi_desc_op_intrgrp {
 	uint8_t rsvd1[42];
 } __packed;
 
+/*
+ * AMD crypto descriptor body (common format for AMD S1/S2 subtypes).
+ *
+ * The `size` field is "bytes minus 1". For a zero-byte request (zbr=1), `size`
+ * must be set to 0.
+ */
+struct sdxi_desc_op_amd_s2 {
+	uint32_t size; /* bytes minus 1 */
+	uint8_t attr0;
+	uint8_t attr1;
+	uint8_t rsvd0[2];
+	uint16_t akey0;
+	uint16_t akey1;
+	uint64_t addr0;
+	uint64_t addr1;
+	uint64_t aes_key_ptr;
+	uint64_t state_ptr;
+	uint32_t ctrl;
+	uint32_t rsvd1;
+} __packed;
 
 union sdxi_desc_body {
 	uint32_t raw[SDXI_DESC_BODY_DWORDS];
@@ -174,6 +210,7 @@ union sdxi_desc_body {
 	struct sdxi_desc_op_atomicgrp atomicgrp;
 	struct sdxi_desc_op_crcm1grp crcm1grp;
 	struct sdxi_desc_op_intrgrp intrgrp;
+	struct sdxi_desc_op_amd_s2 amd_s2;
 } __packed;
 
 struct sdxi_desc {
@@ -223,5 +260,84 @@ void sdxi_dsc_build_crcm1(struct sdxi_desc *desc, uint16_t op_type,
 			  uint64_t seed, uint64_t crc_dst_addr, uint8_t blksz,
 			  uint8_t meta_src, uint8_t meta_dst, uint8_t seed_loc,
 			  uint8_t crcsel, uint8_t reflect, uint8_t invert);
+
+void sdxi_dsc_build_amd_s1_aes_xts(struct sdxi_desc *desc, uint16_t op_type,
+				   uint32_t size_field, uint64_t addr_src,
+				   uint8_t attr_src, uint16_t akey_src,
+				   uint64_t addr_dst, uint8_t attr_dst,
+				   uint16_t akey_dst, uint64_t aes_key_ptr,
+				   uint64_t state_ptr, uint8_t ed, uint8_t ks,
+				   uint8_t xbs);
+
+void sdxi_dsc_build_amd_s1_aes_ecb(struct sdxi_desc *desc, uint16_t op_type,
+				   uint32_t size_field, uint64_t addr_src,
+				   uint8_t attr_src, uint16_t akey_src,
+				   uint64_t addr_dst, uint8_t attr_dst,
+				   uint16_t akey_dst, uint64_t aes_key_ptr,
+				   uint64_t state_ptr, uint8_t ed, uint8_t ks);
+
+void sdxi_dsc_build_amd_s2_aes_xts_c(struct sdxi_desc *desc, uint16_t op_type,
+				     uint32_t size_field, uint64_t addr_src,
+				     uint8_t attr_src, uint16_t akey_src,
+				     uint64_t addr_dst, uint8_t attr_dst,
+				     uint16_t akey_dst, uint64_t aes_key_ptr,
+				     uint64_t state_ptr, uint8_t ed,
+				     uint8_t ks, uint8_t xbs, uint8_t ic,
+				     uint8_t ec);
+
+void sdxi_dsc_build_amd_s2_aes_ecb_c(struct sdxi_desc *desc, uint16_t op_type,
+				     uint32_t size_field, uint64_t addr_src,
+				     uint8_t attr_src, uint16_t akey_src,
+				     uint64_t addr_dst, uint8_t attr_dst,
+				     uint16_t akey_dst, uint64_t aes_key_ptr,
+				     uint64_t state_ptr, uint8_t ed,
+				     uint8_t ks, uint8_t ic, uint8_t ec);
+
+void sdxi_dsc_build_amd_s2_sha(struct sdxi_desc *desc, uint16_t op_type,
+			       uint32_t size_field, uint64_t addr_src,
+			       uint8_t attr_src, uint16_t akey_src,
+			       uint64_t state_ptr, uint8_t sha_mode,
+			       uint8_t fin, uint8_t zbr, uint8_t ic);
+
+void sdxi_dsc_build_amd_s2_sha_copy(struct sdxi_desc *desc, uint16_t op_type,
+				    uint32_t size_field, uint64_t addr_src,
+				    uint8_t attr_src, uint16_t akey_src,
+				    uint64_t addr_dst, uint8_t attr_dst,
+				    uint16_t akey_dst, uint64_t state_ptr,
+				    uint8_t sha_mode, uint8_t fin, uint8_t zbr,
+				    uint8_t ic, uint8_t ec);
+
+void sdxi_dsc_build_amd_s2_aes_gcm(struct sdxi_desc *desc, uint16_t op_type,
+				   uint32_t size_field, uint64_t addr_src,
+				   uint8_t attr_src, uint16_t akey_src,
+				   uint64_t addr_dst, uint8_t attr_dst,
+				   uint16_t akey_dst, uint64_t aes_key_ptr,
+				   uint64_t state_ptr, uint8_t ed, uint8_t ks,
+				   uint8_t aad, uint8_t al, uint8_t fin,
+				   uint8_t zbr, uint8_t ic, uint8_t ec);
+
+void sdxi_dsc_build_amd_s2_aes_ctr(struct sdxi_desc *desc, uint16_t op_type,
+				   uint32_t size_field, uint64_t addr_src,
+				   uint8_t attr_src, uint16_t akey_src,
+				   uint64_t addr_dst, uint8_t attr_dst,
+				   uint16_t akey_dst, uint64_t aes_key_ptr,
+				   uint64_t state_ptr, uint8_t ed, uint8_t ks,
+				   uint8_t ivs, uint8_t ic, uint8_t ec);
+
+void sdxi_dsc_build_amd_s2_aes_ctr_sha(
+	struct sdxi_desc *desc, uint16_t op_type, uint32_t size_field,
+	uint64_t addr_src, uint8_t attr_src, uint16_t akey_src,
+	uint64_t addr_dst, uint8_t attr_dst, uint16_t akey_dst,
+	uint64_t aes_key_ptr, uint64_t state_ptr, uint8_t ed, uint8_t ks,
+	uint8_t ivs, uint8_t sha_mode, uint8_t sha_src, uint8_t fin,
+	uint8_t zbr, uint8_t ic, uint8_t ec);
+
+void sdxi_dsc_build_amd_s2_aes_xts_sha(
+	struct sdxi_desc *desc, uint16_t op_type, uint32_t size_field,
+	uint64_t addr_src, uint8_t attr_src, uint16_t akey_src,
+	uint64_t addr_dst, uint8_t attr_dst, uint16_t akey_dst,
+	uint64_t aes_key_ptr, uint64_t state_ptr, uint8_t ed, uint8_t ks,
+	uint8_t xbs, uint8_t sha_mode, uint8_t sha_src, uint8_t fin,
+	uint8_t zbr, uint8_t ic, uint8_t ec);
 
 #endif /* SDXI_DP_INTERNAL_H */

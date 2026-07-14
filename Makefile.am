@@ -24,7 +24,8 @@ sdxiinclude_HEADERS = \
 
 sdxivendorincludedir = $(includedir)/sdxi/vendor
 sdxivendorinclude_HEADERS = \
-	include/sdxi/vendor/amd_qos.h
+	include/sdxi/vendor/amd_qos.h \
+	include/sdxi/vendor/amd_crypto.h
 
 distclean-local:
 	-rm -f \
